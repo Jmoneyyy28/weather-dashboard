@@ -353,22 +353,6 @@ button { font-family: var(--font-body); }
   font-size: 0.85rem;
 }
 .suns span { color: var(--muted); font-size: 0.72rem; display: block; }
-.daily { list-style: none; margin: 0; padding: 0; }
-.daily li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  border: 1px solid transparent;
-}
-.daily li:hover { background: #ffffff08; }
-.daily li.sel { background: var(--card2); border-color: var(--border); }
-.daily-mid { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
-.daily strong { font-family: var(--font-display); }
 
 /* ---------- overview grid ---------- */
 .grid {

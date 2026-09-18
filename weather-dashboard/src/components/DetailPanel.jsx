@@ -173,27 +173,6 @@ export default function DetailPanel({ place, units }) {
         </div>
       )}
 
-      <ul className="daily">
-        {daily.map((d, i) => (
-          <li key={d.date} className={i === selDay ? 'sel' : ''} onClick={() => setSelDay(i)}>
-            <span>{i === 0 ? 'Today' : formatDay(d.date)}</span>
-            <span className="daily-mid">
-              <WeatherIcon id={d.iconId} icon={d.icon} size={32} alt={d.description} />
-              <span className="cap muted small">{d.description}</span>
-            </span>
-            <span>
-              <strong>
-                {d.max}
-                {unit}
-              </strong>{' '}
-              <span className="muted">
-                / {d.min}
-                {unit}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
       <p className="muted small tier-note">Free OpenWeatherMap tier provides ~5 days of forecast.</p>
     </section>
   );
