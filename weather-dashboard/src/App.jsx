@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CloudSun, X } from '@phosphor-icons/react';
 import DetailPanel from './components/DetailPanel';
 import HeroCard from './components/HeroCard';
+import NewsSection from './components/NewsSection';
 import OverviewGrid from './components/OverviewGrid';
 import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
@@ -209,23 +210,19 @@ export default function App() {
 
         <DetailPanel key={selected?.id ?? 'none'} place={selected} units={units} />
 
-        <div className="section-title" id="overview">
-          <h2>Overview</h2>
-          <span className="muted small">
-            {places.length}/{MAX_PLACES} places
-            {places.length >= MAX_PLACES && ' — full, oldest tile auto-replaced'}
-          </span>
-        </div>
         <OverviewGrid
           places={places}
           selectedId={selected?.id}
           units={units}
+          maxPlaces={MAX_PLACES}
           onSelect={setSelectedId}
           onRemove={(id) => {
             setPlaces((prev) => prev.filter((p) => p.id !== id));
             if (selectedId === id) setSelectedId(null);
           }}
         />
+
+        <NewsSection />
 
         <footer className="muted small">
           Data: OpenWeatherMap (free tier — current + 5-day forecast). Refreshes every 10 min.
