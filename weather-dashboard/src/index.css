@@ -658,6 +658,25 @@ footer { margin-top: 28px; }
   .hero { flex-direction: column; text-align: center; padding: 26px 20px; }
   .hero-blob { inset: 34% 0 0 0; border-radius: 60px 60px 0 0; transform: none; }
   .hero-right { text-align: center; }
+
+  /* News becomes a swipe-only snap carousel on phones (desktop keeps grid). */
+  .news-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 6px 2px 12px;
+    mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+  }
+  .news-grid::-webkit-scrollbar { display: none; }
+  .news-grid .news-card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
+  .news-card img, .news-fallback, .sk-thumb { height: 110px; }
+  .news-body { padding: 10px 12px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-grid { scroll-snap-type: x proximity; }
 }
 
 /* ---------- touch targets ---------- */
