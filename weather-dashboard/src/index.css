@@ -324,6 +324,9 @@ button { font-family: var(--font-body); }
 }
 .hour.now { background: var(--grad); border: 0; color: #fff; }
 .hour.now .muted { color: #ffffffcc; }
+/* Pinned hour (tap/click/Enter) — distinct from the .now gradient. */
+.hour { cursor: pointer; }
+.hour.sel { border-color: #ff5e7e; box-shadow: 0 0 0 1px #ff5e7e, 0 10px 24px rgba(0, 0, 0, 0.35); }
 .hour .t { font-size: 0.72rem; }
 .hour strong { font-family: var(--font-display); font-size: 1rem; }
 
