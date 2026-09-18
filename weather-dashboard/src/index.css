@@ -37,24 +37,26 @@ body {
 .bg::after {
   content: '';
   position: absolute;
-  width: 120vmax;
-  height: 120vmax;
+  /* Oversized so no ellipse edge ever enters the viewport (phones included),
+     even at full drift amplitude — edges sweeping into view read as arcs. */
+  width: 175vmax;
+  height: 175vmax;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(70px);
   opacity: 0.75;
   animation: drift 26s ease-in-out infinite alternate;
 }
-.bg::before { top: -40vmax; right: -30vmax; background: var(--glow1, #2b2f6b); }
+.bg::before { top: -60vmax; right: -45vmax; background: var(--glow1, #2b2f6b); }
 .bg::after {
-  bottom: -45vmax;
-  left: -30vmax;
+  bottom: -65vmax;
+  left: -45vmax;
   background: var(--glow2, #0e3a5d);
   animation-duration: 34s;
   animation-direction: alternate-reverse;
 }
 @keyframes drift {
   from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(-6vmax, 5vmax, 0) scale(1.12); }
+  to { transform: translate3d(-3vmax, 2.5vmax, 0) scale(1.05); }
 }
 @keyframes bgIn {
   from { opacity: 0; }
