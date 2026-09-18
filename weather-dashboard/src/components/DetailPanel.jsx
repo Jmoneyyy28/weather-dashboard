@@ -194,7 +194,7 @@ export default function DetailPanel({ place, units }) {
           </li>
         ))}
       </ul>
-      <p className="muted small">Free OpenWeatherMap tier provides ~5 days of forecast.</p>
+      <p className="muted small tier-note">Free OpenWeatherMap tier provides ~5 days of forecast.</p>
     </section>
   );
 }

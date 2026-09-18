@@ -91,6 +91,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing:
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.05rem; }
 .section-title { margin: 28px 0 12px; display: flex; align-items: baseline; gap: 12px; }
+/* Overview grid sits directly under the details — keep the seam tight. */
+#overview { margin-top: 12px; }
+.tier-note { margin: 6px 0 4px; }
 .section-title .link { font-family: var(--font-display); font-size: 0.8rem; color: #ff6b8f; font-weight: 500; }
 
 .muted { color: var(--muted); }
