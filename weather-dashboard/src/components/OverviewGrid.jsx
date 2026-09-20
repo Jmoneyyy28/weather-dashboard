@@ -1,4 +1,5 @@
-import { Drop, MapPin, Wind, X } from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
+import { CaretLeft, CaretRight, Drop, MapPin, Wind, X } from '@phosphor-icons/react';
 import WeatherIcon from '../lib/weatherIcons';
 
 function unitSymbol(units) {
@@ -9,12 +10,81 @@ function windUnit(units) {
   return units === 'metric' ? 'm/s' : 'mph';
 }
 
-export default function OverviewGrid({ places, selectedId, units, onSelect, onRemove }) {
+export default function OverviewGrid({ places, selectedId, units, maxPlaces, onSelect, onRemove }) {
+  const trackRef = useRef(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const updateArrows = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 8);
+    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    window.addEventListener('resize', updateArrows);
+    return () => window.removeEventListener('resize', updateArrows);
+  }, [places.length]);
+
+  const nudge = (dir) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const w = (el.querySelector('.card')?.offsetWidth ?? 240) + 12;
+    el.scrollBy({ left: dir * w, behavior: 'smooth' });
+  };
+
+  const onTrackKey = (e) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nudge(-1);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nudge(1);
+    }
+  };
+
+  const head = (
+    <div className="section-title" id="overview">
+      <h2>Overview</h2>
+      <span className="muted small">
+        {places.length}/{maxPlaces} places
+        {places.length >= maxPlaces && ' — full, oldest tile auto-replaced'}
+      </span>
+      {places.length > 1 && (
+        <span className="carousel-nav">
+          <button type="button" className="carousel-btn" onClick={() => nudge(-1)} disabled={!canPrev} title="Scroll left" aria-label="Scroll places left">
+            <CaretLeft size={18} weight="bold" />
+          </button>
+          <button type="button" className="carousel-btn" onClick={() => nudge(1)} disabled={!canNext} title="Scroll right" aria-label="Scroll places right">
+            <CaretRight size={18} weight="bold" />
+          </button>
+        </span>
+      )}
+    </div>
+  );
+
   if (places.length === 0) {
-    return <p className="muted">No places yet — search above or use your location.</p>;
+    return (
+      <>
+        {head}
+        <p className="muted">No places yet — search above or use your location.</p>
+      </>
+    );
   }
   return (
-    <div className="grid">
+    <>
+      {head}
+      <div
+        className="carousel"
+        ref={trackRef}
+        onScroll={updateArrows}
+        onKeyDown={onTrackKey}
+        tabIndex={0}
+        role="region"
+        aria-label="Saved places carousel"
+      >
       {places.map((p) => {
         const c = p.current;
         const active = p.id === selectedId;
@@ -87,6 +157,7 @@ export default function OverviewGrid({ places, selectedId, units, onSelect, onRe
           </article>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }
