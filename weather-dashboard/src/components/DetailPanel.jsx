@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Drop, DropHalf, Eye, Gauge, SunHorizon, Thermometer, Wind } from '@phosphor-icons/react';
 import { degToCompass, formatDay, formatHour, getDailyForecast, getHourlySlice } from '../lib/aggregate';
 import { trackShine } from '../lib/shine';
@@ -35,7 +35,9 @@ function Stat({ icon, value, label, open, onToggle, children }) {
 export default function DetailPanel({ place, units }) {
   const [selDay, setSelDay] = useState(0);
   const [hoverHour, setHoverHour] = useState(null);
+  const [selHour, setSelHour] = useState(null);
   const [openStat, setOpenStat] = useState(null);
+  const touchStart = useRef(null);
 
   if (!place) return <p className="muted">Select a place to see details.</p>;
   if (place.loading) return <p className="muted">Loading {place.name}…</p>;
@@ -48,7 +50,10 @@ export default function DetailPanel({ place, units }) {
   const hourly = getHourlySlice(forecast, 10);
   const daily = getDailyForecast(forecast);
   const active = daily[Math.min(selDay, daily.length - 1)];
-  const peek = hourly[Math.min(hoverHour ?? 0, hourly.length - 1)];
+  // Hover live-previews on desktop; tap pins a selection for touch.
+  const activeHour = hoverHour ?? selHour ?? 0;
+  const peek = hourly[Math.min(activeHour, hourly.length - 1)];
+  const toggleHour = (i) => setSelHour((prev) => (prev === i ? null : i));
 
   const rainMm = current.rain?.['1h'] ?? current.rain?.['3h'] ?? 0;
   const precip = rainMm > 0 ? `${rainMm}mm` : `${Math.round((forecast.list[0]?.pop ?? 0) * 100)}%`;
@@ -108,13 +113,30 @@ export default function DetailPanel({ place, units }) {
         {hourly.map((h, i) => (
           <div
             key={h.dt}
-            className={`hour shine${i === 0 ? ' now' : ''}`}
+            className={`hour shine${i === 0 ? ' now' : ''}${i === selHour ? ' sel' : ''}`}
             onMouseEnter={() => setHoverHour(i)}
             onMouseLeave={() => setHoverHour(null)}
             onMouseMove={trackShine}
             onFocus={() => setHoverHour(i)}
             onBlur={() => setHoverHour(null)}
+            onPointerDown={(e) => {
+              touchStart.current = [e.clientX, e.clientY];
+            }}
+            onClick={(e) => {
+              // Swiping the strip to scroll must not pin an hour.
+              const s = touchStart.current;
+              if (s && Math.hypot(e.clientX - s[0], e.clientY - s[1]) > 10) return;
+              toggleHour(i);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleHour(i);
+              }
+            }}
             tabIndex={0}
+            role="button"
+            aria-pressed={i === selHour}
             aria-label={`${i === 0 ? 'Now' : formatHour(h.dt_txt)}: ${Math.round(h.main.temp)}${unit}, ${h.weather[0].description}`}
           >
             <span className="t muted">{i === 0 ? 'Now' : formatHour(h.dt_txt)}</span>
@@ -128,7 +150,7 @@ export default function DetailPanel({ place, units }) {
       </div>
       {peek && (
         <p className="readout small" aria-live="polite">
-          <strong>{hoverHour ? formatHour(peek.dt_txt) : 'Now'}</strong>
+          <strong>{activeHour ? formatHour(peek.dt_txt) : 'Now'}</strong>
           <span className="cap"> · {peek.weather[0].description}</span>
           <span> · feels {Math.round(peek.main.feels_like)}{unit}</span>
           <span> · <Drop size={13} className="inline-ico" /> {Math.round((peek.pop ?? 0) * 100)}%</span>
