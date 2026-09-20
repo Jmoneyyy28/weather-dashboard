@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Pause, Play, SkipBack, SkipForward } from '@phosphor-icons/react';
-import { getApiKey, hasApiKey } from '../lib/weatherApi';
+import SearchBar from './SearchBar';
+import { getApiKey } from '../lib/weatherApi';
 import { OWM_OVERLAYS, getRadarFrames, owmTile, rainviewerTile } from '../lib/radarApi';
 
 const FRAME_MS = 1200;
@@ -11,7 +12,11 @@ function frameLabel(time) {
   return new Date(time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function RadarMap({ places, selected, onSelect }) {
+function unitSymbol(units) {
+  return units === 'metric' ? '°C' : '°F';
+}
+
+export default function RadarMap({ places, selected, onSelect, onPick, keyPresent, units }) {
   const hostRef = useRef(null);
   const mapRef = useRef(null);
   const radarRef = useRef([]);
@@ -27,8 +32,8 @@ export default function RadarMap({ places, selected, onSelect }) {
   const [frameCount, setFrameCount] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [activeLayer, setActiveLayer] = useState('radar');
+  const [tilesLoading, setTilesLoading] = useState(false);
   const [retry, setRetry] = useState(0);
-  const keyPresent = hasApiKey();
 
   const showFrame = (i) => {
     idxRef.current = i;
@@ -49,10 +54,12 @@ export default function RadarMap({ places, selected, onSelect }) {
 
   // Init map + radar frames once per mount (view switch remounts).
   useEffect(() => {
-    const map = L.map(hostRef.current, { zoomControl: true, worldCopyJump: true }).setView(
+    const map = L.map(hostRef.current, { zoomControl: false, worldCopyJump: true }).setView(
       [selected?.lat ?? 20, selected?.lon ?? 0],
       5,
     );
+    // Bottom-right keeps clear of the floating search (top-left) and timeline.
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Powered by <a href="https://www.esri.com/">Esri</a> &mdash; Esri, Maxar, Earthstar Geographics',
       maxZoom: 18,
@@ -74,6 +81,7 @@ export default function RadarMap({ places, selected, onSelect }) {
           L.tileLayer(rainviewerTile(f.path), {
             opacity: 0,
             zIndex: 500,
+            keepBuffer: 1,
             attribution: '<a href="https://www.rainviewer.com/">RainViewer</a>',
           }).addTo(map),
         );
@@ -150,11 +158,17 @@ export default function RadarMap({ places, selected, onSelect }) {
           owmRef.current[def.id] = L.tileLayer(owmTile(def.layer, getApiKey()), {
             opacity: 0.55,
             zIndex: 480,
+            keepBuffer: 1,
             attribution: 'Weather: <a href="https://openweathermap.org/">OpenWeatherMap</a>',
           });
         }
-        owmRef.current[def.id].addTo(map);
+        const layer = owmRef.current[def.id];
+        setTilesLoading(true);
+        layer.once('load', () => setTilesLoading(false));
+        layer.addTo(map);
       }
+    } else {
+      setTilesLoading(false);
     }
   }, [activeLayer, status, keyPresent]);
 
@@ -167,10 +181,10 @@ export default function RadarMap({ places, selected, onSelect }) {
         <span className="muted small">
           {status === 'ready' && currentFrame ? `Precipitation · ${frameLabel(currentFrame.time)}` : 'Precipitation radar'}
         </span>
-        <span className="carousel-nav">
+        <span className="seg" role="group" aria-label="Map layer">
           <button
             type="button"
-            className={`daytab${activeLayer === 'radar' ? ' active' : ''}`}
+            className={activeLayer === 'radar' ? 'on' : ''}
             onClick={() => setActiveLayer('radar')}
           >
             Radar
@@ -179,7 +193,7 @@ export default function RadarMap({ places, selected, onSelect }) {
             <button
               key={o.id}
               type="button"
-              className={`daytab${activeLayer === o.id ? ' active' : ''}`}
+              className={`${activeLayer === o.id ? 'on' : ''}${tilesLoading && activeLayer === o.id ? ' loading' : ''}`}
               onClick={() => keyPresent && setActiveLayer(o.id)}
               disabled={!keyPresent}
               title={keyPresent ? `${o.label} overlay` : 'Needs an OpenWeatherMap API key'}
@@ -191,6 +205,9 @@ export default function RadarMap({ places, selected, onSelect }) {
       </div>
 
       <div className="radar-wrap">
+        <div className="radar-search">
+          <SearchBar onPick={onPick} disabled={!keyPresent} />
+        </div>
         <div ref={hostRef} className="radar-host" role="application" aria-label="Interactive weather radar map" />
         {status === 'loading' && (
           <div className="radar-veil">
@@ -219,6 +236,27 @@ export default function RadarMap({ places, selected, onSelect }) {
             <span className="muted small">
               {frameIdx + 1}/{frameCount} · {currentFrame ? frameLabel(currentFrame.time) : ''}
             </span>
+          </div>
+        )}
+        {places.length > 1 && (
+          <div className="place-strip" role="group" aria-label="Jump to a saved place">
+            {places.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`place-chip${p.id === selected?.id ? ' active' : ''}`}
+                onClick={() => onSelect(p.id)}
+                title={`Show ${p.name} on the map`}
+              >
+                <span>{p.name}</span>
+                {p.current && (
+                  <strong>
+                    {Math.round(p.current.main.temp)}
+                    {unitSymbol(units)}
+                  </strong>
+                )}
+              </button>
+            ))}
           </div>
         )}
       </div>

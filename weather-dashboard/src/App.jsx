@@ -139,6 +139,11 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // Freeze ambient animation costs while the map view owns the screen.
+  useEffect(() => {
+    document.body.classList.toggle('map-active', view === 'map');
+  }, [view]);
+
   const navigate = useCallback((v, anchor) => {
     window.location.hash = v === 'map' ? '/map' : '/';
     setView(v);
@@ -196,13 +201,13 @@ export default function App() {
   return (
     <>
     <div className={`bg bg-${theme}`} key={theme} aria-hidden="true" />
-    <WeatherEffects key={`${fx.type}-${fxBucket}`} effect={fx} />
+    <WeatherEffects key={`${fx.type}-${fxBucket}`} effect={fx} paused={view === 'map'} />
     <div className="layout">
       <Sidebar units={units} onUnits={setUnits} onGeo={handleGeo} geoBusy={geoBusy} view={view} onNavigate={navigate} />
 
       <div className="main">
         {view === 'map' ? (
-          <RadarMap places={places} selected={selected} onSelect={setSelectedId} />
+          <RadarMap places={places} selected={selected} onSelect={setSelectedId} onPick={addPlace} keyPresent={keyPresent} units={units} />
         ) : (
         <>
         <div className="brandrow">

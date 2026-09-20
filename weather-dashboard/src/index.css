@@ -633,13 +633,48 @@ footer { margin-top: 28px; }
 /* ---------- live radar map ---------- */
 .radar-wrap { position: relative; }
 .radar-host {
-  height: 70vh;
-  min-height: 380px;
+  height: 75vh;
+  min-height: 420px;
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0a0e18;
 }
+/* Freeze ambient animation costs while the map owns the screen. */
+body.map-active .bg::before, body.map-active .bg::after { animation: none; }
+body.map-active .fx { display: none; }
+body.map-active #root { padding-left: 8px; padding-right: 8px; }
+/* Floating glass search over the map (iPhone-style). */
+.radar-search { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; pointer-events: none; }
+.radar-search .search { max-width: 420px; margin-bottom: 0; pointer-events: auto; }
+.radar-search .search input { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+.radar-search .search-results { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
+/* iOS-style segmented layer control. */
+.seg {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(16, 16, 26, 0.55);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 3px;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.seg button.on { background: var(--grad); color: #fff; }
+.seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+.seg button.loading { animation: pulse 1s ease-in-out infinite; }
 /* Contain Leaflet's high z-index panes so map chrome never covers the nav. */
 .leaflet-container { z-index: 0; font-family: var(--font-body); }
 .radar-veil {
@@ -659,10 +694,9 @@ footer { margin-top: 28px; }
 }
 .radar-timeline {
   position: absolute;
-  left: 50%;
-  bottom: 14px;
-  transform: translateX(-50%);
-  z-index: 1;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -674,6 +708,42 @@ footer { margin-top: 28px; }
   padding: 6px 14px 6px 6px;
   white-space: nowrap;
 }
+/* Bottom place-jump strip over the map. */
+.place-strip {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 2px 4px;
+  mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%);
+}
+.place-strip::-webkit-scrollbar { display: none; }
+.place-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 16, 26, 0.8);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.place-chip strong { font-family: var(--font-display); }
+.place-chip.active { border-color: #ff5e7e; }
 .radar-pin-wrap { background: none; border: 0; }
 .radar-pin {
   display: block;
@@ -745,6 +815,8 @@ footer { margin-top: 28px; }
   .news-card img, .news-fallback, .sk-thumb { height: 110px; }
   .news-body { padding: 10px 12px 12px; }
   .radar-host { height: 60vh; min-height: 320px; }
+  .radar-timeline { top: 68px; }
+  .seg button { padding: 8px 12px; }
 }
 
 /* Icon-only nav on very narrow phones so all buttons fit. */

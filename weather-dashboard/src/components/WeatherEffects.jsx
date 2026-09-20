@@ -9,7 +9,7 @@ function rand(a, b) {
  * One rAF loop, DPR capped, pauses when tab hidden, static frame for
  * prefers-reduced-motion. intensity is 0..1 (data-driven rain/snow density).
  */
-export default function WeatherEffects({ effect }) {
+export default function WeatherEffects({ effect, paused = false }) {
   const ref = useRef(null);
   const { type, intensity } = effect;
 
@@ -236,7 +236,9 @@ export default function WeatherEffects({ effect }) {
     }
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
+    // Paused (e.g. map view): paint one static frame, skip the rAF loop so
+    // Leaflet gets the full GPU/main-thread budget.
+    if (paused || reduced) {
       draw(1200, 0);
       return () => window.removeEventListener('resize', resize);
     }
@@ -258,7 +260,7 @@ export default function WeatherEffects({ effect }) {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
     };
-  }, [type, intensity]);
+  }, [type, intensity, paused]);
 
   return <canvas className="fx" ref={ref} aria-hidden="true" />;
 }
