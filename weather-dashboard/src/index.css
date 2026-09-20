@@ -271,7 +271,7 @@ button { font-family: var(--font-body); }
 .hero-left svg { margin-top: 10px; filter: drop-shadow(0 10px 18px #00000055); }
 .hero-right { text-align: right; color: #fff; }
 .hero-cond { font-size: 0.95rem; font-weight: 400; margin: 0 0 2px; }
-.hero-temp { font-family: var(--font-display); font-size: 5rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.hero-temp { font-family: var(--font-display); font-size: clamp(2.9rem, 8vw + 1rem, 5rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
 .hero-temp span { font-size: 2.2rem; vertical-align: super; }
 .hero-minmax { font-size: 0.8rem; margin: 6px 0 12px; opacity: 0.92; }
 .hero-chip {
@@ -344,7 +344,9 @@ button { font-family: var(--font-body); }
 .daytab.active strong { color: #fff; }
 .suns {
   display: flex;
-  gap: 26px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  gap: 12px 26px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -366,7 +368,7 @@ button { font-family: var(--font-body); }
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }
 .carousel::-webkit-scrollbar { display: none; }
-.carousel .card { flex: 0 0 240px; scroll-snap-align: start; }
+.carousel .card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
 .carousel:focus-visible { outline: 2px solid #ff5e7e; outline-offset: 2px; border-radius: 12px; }
 .carousel-nav { margin-left: auto; display: inline-flex; gap: 8px; }
 .carousel-btn {
@@ -428,7 +430,7 @@ button { font-family: var(--font-body); }
 .card header { display: flex; justify-content: space-between; align-items: flex-start; }
 .card h3 { font-size: 0.95rem; }
 .card-main { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-.card-main .temp { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; }
+.card-main .temp { font-family: var(--font-display); font-size: clamp(1.5rem, 5vw, 1.9rem); font-weight: 700; letter-spacing: -0.02em; }
 .card p { margin: 4px 0; font-size: 0.85rem; }
 .card-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 0.8rem; }
 .icon-btn {
@@ -530,6 +532,26 @@ footer { margin-top: 28px; }
 }
 .hero-temp { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
 
+/* Solid fallback where backdrop-filter is unsupported (older browsers). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar,
+  .search input,
+  .search-results,
+  .hero,
+  .stat,
+  .hour,
+  .daytab,
+  .suns,
+  .card,
+  .banner,
+  .side-units,
+  .readout,
+  .carousel-btn,
+  .news-card {
+    background: #14141d;
+  }
+}
+
 /* ---------- phosphor icons ---------- */
 .inline-ico { vertical-align: -0.18em; }
 .flip-y { transform: scaleY(-1); }
@@ -606,21 +628,41 @@ footer { margin-top: 28px; }
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .hero-temp { font-size: 3.6rem; }
 }
 @media (max-width: 720px) {
-  .layout { flex-direction: column; }
+  #root { padding: 14px 14px 120px; }
+  .layout { flex-direction: column; align-items: stretch; }
   .sidebar {
-    position: static;
-    width: 100%;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    width: auto;
     flex-direction: row;
+    align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    gap: 4px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
   }
-  .side-nav { flex-direction: row; width: auto; }
+  .side-brand { display: none; }
+  .side-nav { flex-direction: row; flex: 1; justify-content: space-around; width: auto; }
+  .side-nav button, .side-btn { padding: 8px 6px; min-width: 44px; min-height: 44px; }
   .side-div { display: none; }
   .side-units { flex-direction: row; }
   .hero { flex-direction: column; text-align: center; padding: 26px 20px; }
   .hero-blob { inset: 34% 0 0 0; border-radius: 60px 60px 0 0; transform: none; }
   .hero-right { text-align: center; }
+}
+
+/* ---------- touch targets ---------- */
+@media (pointer: coarse) {
+  .carousel-btn { width: 40px; height: 40px; }
+  .daytab { padding: 10px 16px; }
+  .hour { padding: 14px 8px; }
 }
