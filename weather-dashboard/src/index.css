@@ -835,6 +835,17 @@ body.map-active #root { padding-left: 8px; padding-right: 8px; }
   .news-grid:not(.swipe) .sk-line.short { display: none; }
   .radar-host { height: 60vh; min-height: 320px; }
   .radar-host.mini { height: 240px; min-height: 0; }
+  /* Full-bleed map canvas on phones: edge-to-edge, square, taller. */
+  body.map-active .radar-wrap { margin: 0 -8px; }
+  body.map-active .radar-host {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    height: 78vh;
+    height: 78dvh;
+    min-height: 480px;
+  }
+  body.map-active .radar-veil { border-radius: 0; }
   .radar-timeline { top: 68px; }
   .seg button { padding: 8px 12px; }
 }
