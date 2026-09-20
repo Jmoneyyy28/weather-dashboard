@@ -76,6 +76,7 @@ body {
 .fx {
   position: fixed;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -103,7 +104,7 @@ h2 { font-size: 1.05rem; }
 button { font-family: var(--font-body); }
 
 /* ---------- layout ---------- */
-.layout { display: flex; gap: 20px; align-items: flex-start; }
+.layout { display: flex; gap: 20px; align-items: flex-start; position: relative; z-index: 1; }
 .main { flex: 1; min-width: 0; }
 
 .brandrow { margin: 2px 0 16px; }
