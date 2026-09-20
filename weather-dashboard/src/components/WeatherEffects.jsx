@@ -207,9 +207,11 @@ export default function WeatherEffects({ effect }) {
         }
       } else if (type === 'clouds') {
         for (const b of blobs) {
+          // Ping-pong near the edges instead of teleporting across the
+          // screen: a wrap pop reads as a flickering seam while animating.
+          if (b.x > w - b.rx * 0.3) b.speed = -Math.abs(b.speed);
+          else if (b.x < b.rx * 0.3) b.speed = Math.abs(b.speed);
           b.x += b.speed * s;
-          if (b.x - b.rx > w) b.x = -b.rx;
-          if (b.x + b.rx < 0) b.x = w + b.rx;
           const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.rx);
           g.addColorStop(0, `rgba(150, 170, 200, ${b.alpha})`);
           g.addColorStop(1, 'rgba(150, 170, 200, 0)');
