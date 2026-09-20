@@ -1,4 +1,5 @@
-import { Drop, Gauge, MapPin, Thermometer, Wind, X } from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
+import { CaretLeft, CaretRight, Drop, Gauge, MapPin, Thermometer, Wind, X } from '@phosphor-icons/react';
 import WeatherIcon from '../lib/weatherIcons';
 
 function unitSymbol(units) {
@@ -10,6 +11,40 @@ function windUnit(units) {
 }
 
 export default function OverviewGrid({ places, selectedId, units, maxPlaces, onSelect, onRemove }) {
+  const trackRef = useRef(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const updateArrows = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 8);
+    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    window.addEventListener('resize', updateArrows);
+    return () => window.removeEventListener('resize', updateArrows);
+  }, [places.length]);
+
+  const nudge = (dir) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const w = (el.querySelector('.card')?.offsetWidth ?? 240) + 12;
+    el.scrollBy({ left: dir * w, behavior: 'smooth' });
+  };
+
+  const onTrackKey = (e) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      nudge(-1);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nudge(1);
+    }
+  };
+
   const head = (
     <div className="section-title" id="overview">
       <h2>Overview</h2>
@@ -17,6 +52,16 @@ export default function OverviewGrid({ places, selectedId, units, maxPlaces, onS
         {places.length}/{maxPlaces} places
         {places.length >= maxPlaces && ' — full, oldest tile auto-replaced'}
       </span>
+      {places.length > 1 && (
+        <span className="carousel-nav">
+          <button type="button" className="carousel-btn" onClick={() => nudge(-1)} disabled={!canPrev} title="Scroll left" aria-label="Scroll places left">
+            <CaretLeft size={18} weight="bold" />
+          </button>
+          <button type="button" className="carousel-btn" onClick={() => nudge(1)} disabled={!canNext} title="Scroll right" aria-label="Scroll places right">
+            <CaretRight size={18} weight="bold" />
+          </button>
+        </span>
+      )}
     </div>
   );
 
@@ -31,87 +76,95 @@ export default function OverviewGrid({ places, selectedId, units, maxPlaces, onS
   return (
     <>
       {head}
-      <div className="grid" role="region" aria-label="Saved places">
-        {places.map((p) => {
-          const c = p.current;
-          const active = p.id === selectedId;
-          return (
-            <article
-              key={p.id}
-              className={`card${active ? ' active' : ''}`}
-              onClick={() => onSelect(p.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelect(p.id);
-                }
-              }}
-              tabIndex={0}
-              role="button"
-              aria-pressed={active}
-              title="Click to view details"
-            >
-              <header>
-                <div>
-                  <h3>
-                    {p.isGeo && <MapPin size={14} weight="fill" className="inline-ico" />}
-                    {p.name}
-                  </h3>
-                  <span className="muted small">{p.country}</span>
+      <div
+        className="carousel"
+        ref={trackRef}
+        onScroll={updateArrows}
+        onKeyDown={onTrackKey}
+        tabIndex={0}
+        role="region"
+        aria-label="Saved places carousel"
+      >
+      {places.map((p) => {
+        const c = p.current;
+        const active = p.id === selectedId;
+        return (
+          <article
+            key={p.id}
+            className={`card${active ? ' active' : ''}`}
+            onClick={() => onSelect(p.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(p.id);
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-pressed={active}
+            title="Click to view details"
+          >
+            <header>
+              <div>
+                <h3>
+                  {p.isGeo && <MapPin size={14} weight="fill" className="inline-ico" />}
+                  {p.name}
+                </h3>
+                <span className="muted small">{p.country}</span>
+              </div>
+              <button
+                type="button"
+                className="icon-btn"
+                title="Remove"
+                aria-label={`Remove ${p.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(p.id);
+                }}
+              >
+                <X size={14} />
+              </button>
+            </header>
+            {p.loading && <p className="muted">Loading…</p>}
+            {p.error && <p className="error small">{p.error}</p>}
+            {c && (
+              <>
+                <div className="card-main">
+                  <WeatherIcon
+                    id={c.weather[0].id}
+                    icon={c.weather[0].icon}
+                    size={64}
+                    alt={c.weather[0].description}
+                  />
+                  <div className="temp">
+                    {Math.round(c.main.temp)}
+                    {unitSymbol(units)}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  title="Remove"
-                  aria-label={`Remove ${p.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(p.id);
-                  }}
-                >
-                  <X size={14} />
-                </button>
-              </header>
-              {p.loading && <p className="muted">Loading…</p>}
-              {p.error && <p className="error small">{p.error}</p>}
-              {c && (
-                <>
-                  <div className="card-main">
-                    <WeatherIcon
-                      id={c.weather[0].id}
-                      icon={c.weather[0].icon}
-                      size={64}
-                      alt={c.weather[0].description}
-                    />
-                    <div className="temp">
-                      {Math.round(c.main.temp)}
-                      {unitSymbol(units)}
-                    </div>
-                  </div>
-                  <p className="cap">{c.weather[0].description}</p>
-                  <div className="card-meta">
-                    <span>H {Math.round(c.main.temp_max)}{unitSymbol(units)}</span>
-                    <span>L {Math.round(c.main.temp_min)}{unitSymbol(units)}</span>
-                  </div>
-                  <div className="card-meta muted small">
-                    <span><Drop size={13} className="inline-ico" /> {c.main.humidity}%</span>
-                    <span>
-                      <Wind size={13} className="inline-ico" /> {Math.round(c.wind.speed)} {windUnit(units)}
-                    </span>
-                  </div>
-                  <div className="card-meta muted small">
-                    <span>
-                      <Thermometer size={13} className="inline-ico" /> feels {Math.round(c.main.feels_like)}{unitSymbol(units)}
-                    </span>
-                    <span>
-                      <Gauge size={13} className="inline-ico" /> {c.main.pressure}hPa
-                    </span>
-                  </div>
-                </>
-              )}
-            </article>
-          );
-        })}
+                <p className="cap">{c.weather[0].description}</p>
+                <div className="card-meta">
+                  <span>H {Math.round(c.main.temp_max)}{unitSymbol(units)}</span>
+                  <span>L {Math.round(c.main.temp_min)}{unitSymbol(units)}</span>
+                </div>
+                <div className="card-meta muted small">
+                  <span><Drop size={13} className="inline-ico" /> {c.main.humidity}%</span>
+                  <span>
+                    <Wind size={13} className="inline-ico" /> {Math.round(c.wind.speed)} {windUnit(units)}
+                  </span>
+                </div>
+                <div className="card-meta muted small">
+                  <span>
+                    <Thermometer size={13} className="inline-ico" /> feels {Math.round(c.main.feels_like)}{unitSymbol(units)}
+                  </span>
+                  <span>
+                    <Gauge size={13} className="inline-ico" /> {c.main.pressure}hPa
+                  </span>
+                </div>
+              </>
+            )}
+          </article>
+        );
+      })}
       </div>
     </>
   );
