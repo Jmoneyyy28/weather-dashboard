@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Newspaper } from '@phosphor-icons/react';
 import { getWeatherNews } from '../lib/newsApi';
+
+const REFRESH_MS = 60 * 60 * 1000;
 
 function timeAgo(iso) {
   const ts = Date.parse(iso);
@@ -13,28 +15,72 @@ function timeAgo(iso) {
 }
 
 export default function NewsSection() {
-  const [state, setState] = useState({ status: 'loading', items: [] });
+  const [state, setState] = useState({ status: 'loading', items: [], updatedAt: null });
+  const lastFetch = useRef(0);
 
   useEffect(() => {
     let live = true;
-    getWeatherNews().then(
-      (items) => {
-        if (live) setState({ status: items.length > 0 ? 'ready' : 'error', items });
-      },
-      () => {
-        if (live) setState({ status: 'error', items: [] });
-      },
-    );
+    const sameLineup = (a, b) =>
+      a.length === b.length && a.every((item, i) => item.link === b[i]?.link);
+
+    const load = async (force) => {
+      let items = [];
+      try {
+        items = await getWeatherNews(force);
+      } catch {
+        items = [];
+      }
+      if (!live) return;
+      setState((prev) => {
+        if (items.length > 0) {
+          if (prev.status === 'ready' && sameLineup(prev.items, items)) return prev;
+          return { status: 'ready', items, updatedAt: Date.now() };
+        }
+        // Empty result: only the initial load can land in the error state;
+        // later refreshes silently keep showing the stale stories.
+        return prev.status === 'ready'
+          ? prev
+          : { status: 'error', items: [], updatedAt: null };
+      });
+    };
+
+    // NOTE: the initial load is unconditional on purpose. With StrictMode's
+    // double-effect in dev, a staleness guard here would let the discarded
+    // pass consume the fetch while the live pass skips it. Only the
+    // interval / visibility triggers below are staleness-guarded.
+    lastFetch.current = Date.now();
+    load(false);
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+      lastFetch.current = Date.now();
+      load(true);
+    }, REFRESH_MS);
+    const onVis = () => {
+      if (document.hidden) return;
+      if (Date.now() - lastFetch.current < REFRESH_MS) return;
+      lastFetch.current = Date.now();
+      load(false);
+    };
+    document.addEventListener('visibilitychange', onVis);
     return () => {
       live = false;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, []);
+
+  const updated = state.updatedAt
+    ? new Date(state.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <section aria-label="Weather news">
       <div className="section-title" id="news">
         <h2>Weather News</h2>
-        <span className="muted small">Global headlines</span>
+        <span className="muted small">
+          Global headlines
+          {updated && ` · updated ${updated}`}
+        </span>
       </div>
 
       {state.status === 'loading' && (

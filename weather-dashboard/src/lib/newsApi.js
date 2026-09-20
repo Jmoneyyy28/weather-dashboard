@@ -6,7 +6,7 @@
  */
 
 const FEEDS = [
-  { source: 'BBC Weather', url: 'https://feeds.bbci.co.uk/news/weather/rss.xml' },
+  { source: 'ScienceDaily Earth', url: 'https://www.sciencedaily.com/rss/earth_climate.xml' },
   { source: 'Phys.org Earth', url: 'https://phys.org/rss-feed/earth-news/' },
 ];
 
@@ -33,10 +33,15 @@ function truncate(s, n) {
 }
 
 async function fetchFeed({ source, url }) {
-  const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
-  if (!res.ok) throw new Error(`feed ${res.status}`);
-  const data = await res.json();
-  if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('bad feed payload');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`, {
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`feed ${res.status}`);
+    const data = await res.json();
+    if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('bad feed payload');
   return data.items
     .filter((i) => i && i.link && i.title)
     .map((i) => ({
@@ -49,10 +54,13 @@ async function fetchFeed({ source, url }) {
       description: truncate(i.description || i.content || '', 140),
       thumbnail: i.thumbnail || i.enclosure?.link || null,
     }));
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
-export async function getWeatherNews() {
-  if (Date.now() - cache.at < TTL && cache.items.length > 0) return cache.items;
+export async function getWeatherNews(force = false) {
+  if (!force && Date.now() - cache.at < TTL && cache.items.length > 0) return cache.items;
   const settled = await Promise.allSettled(FEEDS.map(fetchFeed));
   const seen = new Map();
   for (const r of settled) {
