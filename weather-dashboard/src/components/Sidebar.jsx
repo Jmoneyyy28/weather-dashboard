@@ -5,30 +5,31 @@ import {
   GridFour,
   ListBullets,
   MapPin,
+  MapTrifold,
 } from '@phosphor-icons/react';
 
-export default function Sidebar({ units, onUnits, onGeo, geoBusy }) {
-  function scrollTo(id) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
+export default function Sidebar({ units, onUnits, onGeo, geoBusy, view, onNavigate }) {
   return (
     <aside className="sidebar">
       <div className="side-brand" title="Weather Dashboard">
         <CloudSun size={26} weight="duotone" />
       </div>
       <nav className="side-nav">
-        <button type="button" onClick={() => scrollTo('today')} title="Today">
+        <button type="button" onClick={() => onNavigate('home', 'today')} title="Today" className={view === 'home' ? 'active' : ''}>
           <span className="side-ico"><CalendarDot size={20} /></span>
           <span className="side-lbl">Today</span>
         </button>
-        <button type="button" onClick={() => scrollTo('overview')} title="Overview">
+        <button type="button" onClick={() => onNavigate('home', 'overview')} title="Overview" className={view === 'home' ? 'active' : ''}>
           <span className="side-ico"><GridFour size={20} /></span>
           <span className="side-lbl">Places</span>
         </button>
-        <button type="button" onClick={() => scrollTo('details')} title="Details">
+        <button type="button" onClick={() => onNavigate('home', 'details')} title="Details" className={view === 'home' ? 'active' : ''}>
           <span className="side-ico"><ListBullets size={20} /></span>
           <span className="side-lbl">Details</span>
+        </button>
+        <button type="button" onClick={() => onNavigate('map')} title="Radar map" className={view === 'map' ? 'active' : ''}>
+          <span className="side-ico"><MapTrifold size={20} /></span>
+          <span className="side-lbl">Radar</span>
         </button>
       </nav>
       <div className="side-div" />

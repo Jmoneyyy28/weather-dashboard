@@ -4,6 +4,7 @@ import DetailPanel from './components/DetailPanel';
 import HeroCard from './components/HeroCard';
 import NewsSection from './components/NewsSection';
 import OverviewGrid from './components/OverviewGrid';
+import RadarMap from './components/RadarMap';
 import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
 import WeatherEffects from './components/WeatherEffects';
@@ -34,6 +35,9 @@ export default function App() {
   const [geoStatus, setGeoStatus] = useState('idle');
   const [geoBusy, setGeoBusy] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [view, setView] = useState(() =>
+    typeof window !== 'undefined' && window.location.hash === '#/map' ? 'map' : 'home',
+  );
   const keyPresent = hasApiKey();
   const unitsRef = useRef(units);
   unitsRef.current = units;
@@ -128,6 +132,26 @@ export default function App() {
     return () => clearInterval(t);
   }, [loadWeather]);
 
+  // View routing (hash-synced so #/map is shareable + back-button friendly).
+  useEffect(() => {
+    const onHash = () => setView(window.location.hash === '#/map' ? 'map' : 'home');
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const navigate = useCallback((v, anchor) => {
+    window.location.hash = v === 'map' ? '/map' : '/';
+    setView(v);
+    if (v === 'home' && anchor) {
+      // Let the home view render before scrolling to its section.
+      setTimeout(() => {
+        document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    } else {
+      window.scrollTo({ top: 0 });
+    }
+  }, []);
+
   async function handleGeo() {
     if (!('geolocation' in navigator)) {
       setGeoStatus('Geolocation is not supported by this browser.');
@@ -174,9 +198,13 @@ export default function App() {
     <div className={`bg bg-${theme}`} key={theme} aria-hidden="true" />
     <WeatherEffects key={`${fx.type}-${fxBucket}`} effect={fx} />
     <div className="layout">
-      <Sidebar units={units} onUnits={setUnits} onGeo={handleGeo} geoBusy={geoBusy} />
+      <Sidebar units={units} onUnits={setUnits} onGeo={handleGeo} geoBusy={geoBusy} view={view} onNavigate={navigate} />
 
       <div className="main">
+        {view === 'map' ? (
+          <RadarMap places={places} selected={selected} onSelect={setSelectedId} />
+        ) : (
+        <>
         <div className="brandrow">
           <h1><CloudSun size={26} weight="duotone" className="inline-ico" /> 4Winds Weather</h1>
           <p className="muted">Your places at a glance — search, locate, compare.</p>
@@ -227,6 +255,8 @@ export default function App() {
         <footer className="muted small">
           Data: OpenWeatherMap (free tier — current + 5-day forecast). Refreshes every 10 min.
         </footer>
+        </>
+        )}
       </div>
     </div>
     </>

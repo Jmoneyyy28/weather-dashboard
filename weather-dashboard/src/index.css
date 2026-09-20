@@ -630,6 +630,71 @@ footer { margin-top: 28px; }
   .hero.shine::after, .hour.shine::after { display: none; }
 }
 
+/* ---------- live radar map ---------- */
+.radar-wrap { position: relative; }
+.radar-host {
+  height: 70vh;
+  min-height: 380px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0a0e18;
+}
+/* Contain Leaflet's high z-index panes so map chrome never covers the nav. */
+.leaflet-container { z-index: 0; font-family: var(--font-body); }
+.radar-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  background: rgba(8, 8, 13, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 20px;
+}
+.radar-timeline {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 16, 26, 0.78);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 6px 14px 6px 6px;
+  white-space: nowrap;
+}
+.radar-pin-wrap { background: none; border: 0; }
+.radar-pin {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 2px;
+  border-radius: 50%;
+  background: #8ab4ff;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.radar-pin.active { background: #ff5e7e; width: 18px; height: 18px; margin: 0; }
+.leaflet-bar a { background: #14141d; color: var(--text); border-color: rgba(255, 255, 255, 0.12); }
+.leaflet-bar a:hover { background: #1d1d27; color: var(--text); }
+.leaflet-control-attribution { background: rgba(8, 8, 13, 0.6) !important; color: #8a87a0 !important; font-size: 10px; }
+.leaflet-control-attribution a { color: #a5a2c0 !important; }
+.side-nav button.active { background: #ffffff14; color: var(--text); }
+.daytab:disabled { opacity: 0.4; cursor: not-allowed; }
+.daytab:disabled:hover { transform: none; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
@@ -663,6 +728,7 @@ footer { margin-top: 28px; }
   .hero { flex-direction: column; text-align: center; padding: 26px 20px; }
   .hero-blob { inset: 34% 0 0 0; border-radius: 60px 60px 0 0; transform: none; }
   .hero-right { text-align: center; }
+  .section-title { flex-wrap: wrap; row-gap: 8px; }
 
   /* News becomes a swipe-only snap carousel on phones (desktop keeps grid). */
   .news-grid {
@@ -678,6 +744,13 @@ footer { margin-top: 28px; }
   .news-grid .news-card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
   .news-card img, .news-fallback, .sk-thumb { height: 110px; }
   .news-body { padding: 10px 12px 12px; }
+  .radar-host { height: 60vh; min-height: 320px; }
+}
+
+/* Icon-only nav on very narrow phones so all buttons fit. */
+@media (max-width: 480px) {
+  .side-lbl { display: none; }
+  .sidebar { padding-left: 6px; padding-right: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
