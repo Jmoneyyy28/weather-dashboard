@@ -46,7 +46,7 @@ export default function OverviewPage({
         units={units}
         onOpen={onOpenMap}
       />
-      <NewsSection limit={3} teaser />
+      <NewsSection limit={3} teaser swipe />
     </>
   );
 }

@@ -807,8 +807,13 @@ body.map-active #root { padding-left: 8px; padding-right: 8px; }
   .hero-right { text-align: center; }
   .section-title { flex-wrap: wrap; row-gap: 8px; }
 
-  /* News becomes a swipe-only snap carousel on phones (desktop keeps grid). */
+  /* News page: compact 2-column grid on phones (swipe strip stays on the teaser). */
   .news-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .news-grid.swipe {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -817,10 +822,17 @@ body.map-active #root { padding-left: 8px; padding-right: 8px; }
     mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
   }
-  .news-grid::-webkit-scrollbar { display: none; }
-  .news-grid .news-card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
+  .news-grid.swipe::-webkit-scrollbar { display: none; }
+  .news-grid.swipe .news-card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
   .news-card img, .news-fallback, .sk-thumb { height: 110px; }
+  .news-grid:not(.swipe) .news-card img,
+  .news-grid:not(.swipe) .news-fallback,
+  .news-grid:not(.swipe) .sk-thumb { height: 84px; }
   .news-body { padding: 10px 12px 12px; }
+  .news-grid:not(.swipe) .news-body { padding: 8px 10px 10px; }
+  .news-grid:not(.swipe) .news-body strong { font-size: 0.8rem; -webkit-line-clamp: 3; }
+  .news-grid:not(.swipe) .news-body .clamp,
+  .news-grid:not(.swipe) .sk-line.short { display: none; }
   .radar-host { height: 60vh; min-height: 320px; }
   .radar-host.mini { height: 240px; min-height: 0; }
   .radar-timeline { top: 68px; }
@@ -834,7 +846,7 @@ body.map-active #root { padding-left: 8px; padding-right: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .news-grid { scroll-snap-type: x proximity; }
+  .news-grid.swipe { scroll-snap-type: x proximity; }
 }
 
 /* ---------- touch targets ---------- */

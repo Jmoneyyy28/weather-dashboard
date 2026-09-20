@@ -14,7 +14,7 @@ function timeAgo(iso) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export default function NewsSection({ limit = null, teaser = false }) {
+export default function NewsSection({ limit = null, teaser = false, swipe = false }) {
   const [state, setState] = useState({ status: 'loading', items: [], updatedAt: null });
   const lastFetch = useRef(0);
   const items = limit != null ? state.items.slice(0, limit) : state.items;
@@ -89,7 +89,7 @@ export default function NewsSection({ limit = null, teaser = false }) {
       </div>
 
       {state.status === 'loading' && (
-        <div className="news-grid" aria-hidden="true">
+        <div className={`news-grid${swipe ? ' swipe' : ''}`} aria-hidden="true">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="news-card skeleton">
               <div className="sk-thumb" />
@@ -105,7 +105,7 @@ export default function NewsSection({ limit = null, teaser = false }) {
       )}
 
       {state.status === 'ready' && (
-        <div className="news-grid">
+        <div className={`news-grid${swipe ? ' swipe' : ''}`}>
           {items.map((n) => (
             <a key={n.id} className="news-card" href={n.link} target="_blank" rel="noreferrer" title={n.title}>
               {n.thumbnail ? (
