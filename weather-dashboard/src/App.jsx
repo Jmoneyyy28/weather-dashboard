@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CloudSun, X } from '@phosphor-icons/react';
-import DetailPanel from './components/DetailPanel';
+import DailySection from './components/DailySection';
 import HeroCard from './components/HeroCard';
+import HourlyStrip from './components/HourlyStrip';
 import NewsSection from './components/NewsSection';
 import OverviewGrid from './components/OverviewGrid';
+import PlaceMeta from './components/PlaceMeta';
 import RadarMap from './components/RadarMap';
+import StatsGrid from './components/StatsGrid';
 import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
 import WeatherEffects from './components/WeatherEffects';
@@ -35,9 +38,14 @@ export default function App() {
   const [geoStatus, setGeoStatus] = useState('idle');
   const [geoBusy, setGeoBusy] = useState(false);
   const [notice, setNotice] = useState(null);
-  const [view, setView] = useState(() =>
-    typeof window !== 'undefined' && window.location.hash === '#/map' ? 'map' : 'home',
-  );
+  const [view, setView] = useState(() => {
+    if (typeof window === 'undefined') return 'today';
+    const h = window.location.hash;
+    if (h === '#/places') return 'places';
+    if (h === '#/details') return 'details';
+    if (h === '#/map') return 'map';
+    return 'today';
+  });
   const keyPresent = hasApiKey();
   const unitsRef = useRef(units);
   unitsRef.current = units;
@@ -132,9 +140,12 @@ export default function App() {
     return () => clearInterval(t);
   }, [loadWeather]);
 
-  // View routing (hash-synced so #/map is shareable + back-button friendly).
+  // View routing (hash-synced so #/places etc. are shareable + back-button friendly).
   useEffect(() => {
-    const onHash = () => setView(window.location.hash === '#/map' ? 'map' : 'home');
+    const onHash = () => {
+      const h = window.location.hash;
+      setView(h === '#/places' ? 'places' : h === '#/details' ? 'details' : h === '#/map' ? 'map' : 'today');
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -144,17 +155,10 @@ export default function App() {
     document.body.classList.toggle('map-active', view === 'map');
   }, [view]);
 
-  const navigate = useCallback((v, anchor) => {
-    window.location.hash = v === 'map' ? '/map' : '/';
+  const navigate = useCallback((v) => {
+    window.location.hash = v === 'today' ? '/' : `/${v}`;
     setView(v);
-    if (v === 'home' && anchor) {
-      // Let the home view render before scrolling to its section.
-      setTimeout(() => {
-        document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 60);
-    } else {
-      window.scrollTo({ top: 0 });
-    }
+    window.scrollTo(0, 0);
   }, []);
 
   async function handleGeo() {
@@ -198,6 +202,24 @@ export default function App() {
     : { type: 'clear-night', intensity: 1 };
   const fxBucket = intensityBucket(fx.intensity);
 
+  const hasData =
+    selected != null &&
+    !selected.loading &&
+    !selected.error &&
+    selected.current != null &&
+    selected.forecast != null;
+  const placeState = !selected ? (
+    <p className="muted">Search for a city or use your location to see the weather.</p>
+  ) : (
+    <p className={selected.error ? 'error' : 'muted'}>
+      {selected.error ?? `Loading ${selected.name}…`}
+    </p>
+  );
+  const removePlace = (id) => {
+    setPlaces((prev) => prev.filter((p) => p.id !== id));
+    if (selectedId === id) setSelectedId(null);
+  };
+
   return (
     <>
     <div className={`bg bg-${theme}`} key={theme} aria-hidden="true" />
@@ -208,6 +230,35 @@ export default function App() {
       <div className="main">
         {view === 'map' ? (
           <RadarMap places={places} selected={selected} onSelect={setSelectedId} onPick={addPlace} keyPresent={keyPresent} units={units} />
+        ) : view === 'places' ? (
+        <>
+        <SearchBar onPick={addPlace} disabled={!keyPresent} />
+        <OverviewGrid
+          places={places}
+          selectedId={selected?.id}
+          units={units}
+          maxPlaces={MAX_PLACES}
+          onSelect={setSelectedId}
+          onRemove={removePlace}
+        />
+        </>
+        ) : view === 'details' ? (
+        <>
+        <div className="section-title">
+          <h2>Details</h2>
+          <span className="muted small">
+            {selected ? `${selected.name}${selected.country ? `, ${selected.country}` : ''}` : 'no place selected'}
+          </span>
+        </div>
+        {!hasData ? placeState : (
+        <>
+          <StatsGrid key={`s-${selected.id}`} extended current={selected.current} forecast={selected.forecast} units={units} />
+          <HourlyStrip key={`h-${selected.id}`} forecast={selected.forecast} units={units} />
+          <DailySection key={`d-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
+          <PlaceMeta place={selected} />
+        </>
+        )}
+        </>
         ) : (
         <>
         <div className="brandrow">
@@ -241,19 +292,13 @@ export default function App() {
 
         <HeroCard place={selected} units={units} />
 
-        <DetailPanel key={selected?.id ?? 'none'} place={selected} units={units} />
-
-        <OverviewGrid
-          places={places}
-          selectedId={selected?.id}
-          units={units}
-          maxPlaces={MAX_PLACES}
-          onSelect={setSelectedId}
-          onRemove={(id) => {
-            setPlaces((prev) => prev.filter((p) => p.id !== id));
-            if (selectedId === id) setSelectedId(null);
-          }}
-        />
+        {!hasData ? placeState : (
+        <>
+          <StatsGrid key={`s-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
+          <HourlyStrip key={`h-${selected.id}`} forecast={selected.forecast} units={units} />
+          <DailySection key={`d-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
+        </>
+        )}
 
         <NewsSection />
 

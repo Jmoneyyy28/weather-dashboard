@@ -15,15 +15,15 @@ export default function Sidebar({ units, onUnits, onGeo, geoBusy, view, onNaviga
         <CloudSun size={26} weight="duotone" />
       </div>
       <nav className="side-nav">
-        <button type="button" onClick={() => onNavigate('home', 'today')} title="Today" className={view === 'home' ? 'active' : ''}>
+        <button type="button" onClick={() => onNavigate('today')} title="Today" className={view === 'today' ? 'active' : ''}>
           <span className="side-ico"><CalendarDot size={20} /></span>
           <span className="side-lbl">Today</span>
         </button>
-        <button type="button" onClick={() => onNavigate('home', 'overview')} title="Overview" className={view === 'home' ? 'active' : ''}>
+        <button type="button" onClick={() => onNavigate('places')} title="Places" className={view === 'places' ? 'active' : ''}>
           <span className="side-ico"><GridFour size={20} /></span>
           <span className="side-lbl">Places</span>
         </button>
-        <button type="button" onClick={() => onNavigate('home', 'details')} title="Details" className={view === 'home' ? 'active' : ''}>
+        <button type="button" onClick={() => onNavigate('details')} title="Details" className={view === 'details' ? 'active' : ''}>
           <span className="side-ico"><ListBullets size={20} /></span>
           <span className="side-lbl">Details</span>
         </button>

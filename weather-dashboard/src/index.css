@@ -294,6 +294,8 @@ button { font-family: var(--font-body); }
   gap: 12px;
   margin: 16px 0 6px;
 }
+/* Details page: six tiles in a 3x2 arrangement (2 columns below 900px via the shared rule). */
+.stats.six { grid-template-columns: repeat(3, 1fr); }
 .stat {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -361,21 +363,12 @@ button { font-family: var(--font-body); }
 }
 .suns span { color: var(--muted); font-size: 0.72rem; display: block; }
 
-/* ---------- overview carousel ---------- */
-.carousel {
-  display: flex;
+/* ---------- places grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  padding: 6px 2px 12px;
-  mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }
-.carousel::-webkit-scrollbar { display: none; }
-.carousel .card { flex: 0 0 min(240px, 78vw); scroll-snap-align: start; }
-.carousel:focus-visible { outline: 2px solid #ff5e7e; outline-offset: 2px; border-radius: 12px; }
-.carousel-nav { margin-left: auto; display: inline-flex; gap: 8px; }
 .carousel-btn {
   background: rgba(16, 16, 26, 0.55);
   backdrop-filter: blur(18px) saturate(1.25);
@@ -393,9 +386,6 @@ button { font-family: var(--font-body); }
 }
 .carousel-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.35); }
 .carousel-btn:disabled { opacity: 0.35; cursor: default; }
-@media (prefers-reduced-motion: reduce) {
-  .carousel { scroll-snap-type: x proximity; }
-}
 .card {
   background: var(--panel);
   border: 1px solid var(--border);
