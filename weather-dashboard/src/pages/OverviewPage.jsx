@@ -20,7 +20,7 @@ export default function OverviewPage({
   return (
     <>
       <div className="brandrow">
-        <h1><CloudSun size={26} weight="duotone" className="inline-ico" /> 4Winds Weather</h1>
+        <h1><CloudSun size={26} weight="duotone" className="inline-ico" /> CloudCheck</h1>
         <p className="muted">Your places at a glance — search, locate, compare.</p>
       </div>
       <SearchBar onPick={onPick} disabled={!keyPresent} />

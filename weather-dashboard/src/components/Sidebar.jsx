@@ -10,7 +10,7 @@ import {
 export default function Sidebar({ units, onUnits, onGeo, geoBusy, view, onNavigate }) {
   return (
     <aside className="sidebar">
-      <div className="side-brand" title="Weather Dashboard">
+      <div className="side-brand" title="CloudCheck">
         <CloudSun size={26} weight="duotone" />
       </div>
       <nav className="side-nav">
