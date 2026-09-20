@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CloudSun, X } from '@phosphor-icons/react';
-import DailySection from './components/DailySection';
-import HeroCard from './components/HeroCard';
-import HourlyStrip from './components/HourlyStrip';
+import { X } from '@phosphor-icons/react';
 import NewsSection from './components/NewsSection';
-import OverviewGrid from './components/OverviewGrid';
-import PlaceMeta from './components/PlaceMeta';
 import RadarMap from './components/RadarMap';
-import StatsGrid from './components/StatsGrid';
-import SearchBar from './components/SearchBar';
 import Sidebar from './components/Sidebar';
 import WeatherEffects from './components/WeatherEffects';
+import OverviewPage from './pages/OverviewPage';
+import PlacesPage from './pages/PlacesPage';
 import {
   getCurrentWeather,
   getForecast,
@@ -39,12 +34,17 @@ export default function App() {
   const [geoBusy, setGeoBusy] = useState(false);
   const [notice, setNotice] = useState(null);
   const [view, setView] = useState(() => {
-    if (typeof window === 'undefined') return 'today';
+    if (typeof window === 'undefined') return 'overview';
     const h = window.location.hash;
+    // Legacy bookmark: the old Details page now lives under Places.
+    if (h === '#/details') {
+      window.location.hash = '/places';
+      return 'places';
+    }
     if (h === '#/places') return 'places';
-    if (h === '#/details') return 'details';
+    if (h === '#/news') return 'news';
     if (h === '#/map') return 'map';
-    return 'today';
+    return 'overview';
   });
   const keyPresent = hasApiKey();
   const unitsRef = useRef(units);
@@ -144,7 +144,12 @@ export default function App() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash;
-      setView(h === '#/places' ? 'places' : h === '#/details' ? 'details' : h === '#/map' ? 'map' : 'today');
+      if (h === '#/details') {
+        window.location.hash = '/places';
+        setView('places');
+        return;
+      }
+      setView(h === '#/places' ? 'places' : h === '#/news' ? 'news' : h === '#/map' ? 'map' : 'overview');
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -156,7 +161,7 @@ export default function App() {
   }, [view]);
 
   const navigate = useCallback((v) => {
-    window.location.hash = v === 'today' ? '/' : `/${v}`;
+    window.location.hash = v === 'overview' ? '/' : `/${v}`;
     setView(v);
     window.scrollTo(0, 0);
   }, []);
@@ -202,22 +207,13 @@ export default function App() {
     : { type: 'clear-night', intensity: 1 };
   const fxBucket = intensityBucket(fx.intensity);
 
-  const hasData =
-    selected != null &&
-    !selected.loading &&
-    !selected.error &&
-    selected.current != null &&
-    selected.forecast != null;
-  const placeState = !selected ? (
-    <p className="muted">Search for a city or use your location to see the weather.</p>
-  ) : (
-    <p className={selected.error ? 'error' : 'muted'}>
-      {selected.error ?? `Loading ${selected.name}…`}
-    </p>
-  );
   const removePlace = (id) => {
     setPlaces((prev) => prev.filter((p) => p.id !== id));
     if (selectedId === id) setSelectedId(null);
+  };
+  const openPlace = (id) => {
+    setSelectedId(id);
+    navigate('places');
   };
 
   return (
@@ -228,44 +224,6 @@ export default function App() {
       <Sidebar units={units} onUnits={setUnits} onGeo={handleGeo} geoBusy={geoBusy} view={view} onNavigate={navigate} />
 
       <div className="main">
-        {view === 'map' ? (
-          <RadarMap places={places} selected={selected} onSelect={setSelectedId} onPick={addPlace} keyPresent={keyPresent} units={units} />
-        ) : view === 'places' ? (
-        <>
-        <SearchBar onPick={addPlace} disabled={!keyPresent} />
-        <OverviewGrid
-          places={places}
-          selectedId={selected?.id}
-          units={units}
-          maxPlaces={MAX_PLACES}
-          onSelect={setSelectedId}
-          onRemove={removePlace}
-        />
-        </>
-        ) : view === 'details' ? (
-        <>
-        <div className="section-title">
-          <h2>Details</h2>
-          <span className="muted small">
-            {selected ? `${selected.name}${selected.country ? `, ${selected.country}` : ''}` : 'no place selected'}
-          </span>
-        </div>
-        {!hasData ? placeState : (
-        <>
-          <StatsGrid key={`s-${selected.id}`} extended current={selected.current} forecast={selected.forecast} units={units} />
-          <HourlyStrip key={`h-${selected.id}`} forecast={selected.forecast} units={units} />
-          <DailySection key={`d-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
-          <PlaceMeta place={selected} />
-        </>
-        )}
-        </>
-        ) : (
-        <>
-        <div className="brandrow">
-          <h1><CloudSun size={26} weight="duotone" className="inline-ico" /> 4Winds Weather</h1>
-          <p className="muted">Your places at a glance — search, locate, compare.</p>
-        </div>
-
         {!keyPresent && (
           <div className="banner">
             <strong>No API key found.</strong> Get a free key at{' '}
@@ -279,8 +237,6 @@ export default function App() {
 
         {geoStatus !== 'idle' && <p className="muted">{geoStatus}</p>}
 
-        <SearchBar onPick={addPlace} disabled={!keyPresent} />
-
         {notice && (
           <p className="muted small">
             {notice}{' '}
@@ -290,23 +246,37 @@ export default function App() {
           </p>
         )}
 
-        <HeroCard place={selected} units={units} />
-
-        {!hasData ? placeState : (
-        <>
-          <StatsGrid key={`s-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
-          <HourlyStrip key={`h-${selected.id}`} forecast={selected.forecast} units={units} />
-          <DailySection key={`d-${selected.id}`} current={selected.current} forecast={selected.forecast} units={units} />
-        </>
+        {view === 'map' ? (
+          <RadarMap places={places} selected={selected} onSelect={setSelectedId} onPick={addPlace} keyPresent={keyPresent} units={units} />
+        ) : view === 'places' ? (
+          <PlacesPage
+            places={places}
+            selected={selected}
+            units={units}
+            keyPresent={keyPresent}
+            onPick={addPlace}
+            onSelect={setSelectedId}
+          />
+        ) : view === 'news' ? (
+          <NewsSection />
+        ) : (
+          <OverviewPage
+            places={places}
+            selected={selected}
+            selectedId={selected?.id}
+            units={units}
+            maxPlaces={MAX_PLACES}
+            keyPresent={keyPresent}
+            onPick={addPlace}
+            onSelectPlace={openPlace}
+            onRemove={removePlace}
+            onOpenMap={() => navigate('map')}
+          />
         )}
-
-        <NewsSection />
 
         <footer className="muted small">
           Data: OpenWeatherMap (free tier — current + 5-day forecast). Refreshes every 10 min.
         </footer>
-        </>
-        )}
       </div>
     </div>
     </>

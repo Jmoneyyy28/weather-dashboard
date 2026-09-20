@@ -630,6 +630,11 @@ footer { margin-top: 28px; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0a0e18;
 }
+/* Overview hub: compact live preview, click-through to the full map. */
+.radar-host.mini { height: 280px; min-height: 0; cursor: pointer; }
+.radar-host.mini:focus-visible { outline: 2px solid #ff5e7e; outline-offset: 2px; }
+/* Static (in-flow) variant of the place-jump strip for the Places page. */
+.place-strip.static { position: static; margin: 2px 0 4px; }
 /* Freeze ambient animation costs while the map owns the screen. */
 body.map-active .bg::before, body.map-active .bg::after { animation: none; }
 body.map-active .fx { display: none; }
@@ -805,6 +810,7 @@ body.map-active #root { padding-left: 8px; padding-right: 8px; }
   .news-card img, .news-fallback, .sk-thumb { height: 110px; }
   .news-body { padding: 10px 12px 12px; }
   .radar-host { height: 60vh; min-height: 320px; }
+  .radar-host.mini { height: 240px; min-height: 0; }
   .radar-timeline { top: 68px; }
   .seg button { padding: 8px 12px; }
 }

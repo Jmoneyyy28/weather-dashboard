@@ -16,7 +16,7 @@ function unitSymbol(units) {
   return units === 'metric' ? '°C' : '°F';
 }
 
-export default function RadarMap({ places, selected, onSelect, onPick, keyPresent, units }) {
+export default function RadarMap({ places, selected, onSelect, onPick, keyPresent, units, mini = false, onOpen }) {
   const hostRef = useRef(null);
   const mapRef = useRef(null);
   const radarRef = useRef([]);
@@ -54,12 +54,19 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
 
   // Init map + radar frames once per mount (view switch remounts).
   useEffect(() => {
-    const map = L.map(hostRef.current, { zoomControl: false, worldCopyJump: true }).setView(
+    const map = L.map(hostRef.current, {
+      zoomControl: !mini,
+      dragging: !mini,
+      scrollWheelZoom: !mini,
+      doubleClickZoom: !mini,
+      boxZoom: !mini,
+      keyboard: !mini,
+      worldCopyJump: true,
+    }).setView(
       [selected?.lat ?? 20, selected?.lon ?? 0],
       5,
     );
-    // Bottom-right keeps clear of the floating search (top-left) and timeline.
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    if (!mini) L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Powered by <a href="https://www.esri.com/">Esri</a> &mdash; Esri, Maxar, Earthstar Geographics',
       maxZoom: 18,
@@ -88,9 +95,12 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
         setFrameCount(frames.length);
         showFrame(frames.length - 1);
         setStatus('ready');
-        timerRef.current = setInterval(() => {
-          if (playingRef.current && document.visibilityState === 'visible') step(1);
-        }, FRAME_MS);
+        // Mini overview tile shows the latest frame statically (cheap).
+        if (!mini) {
+          timerRef.current = setInterval(() => {
+            if (playingRef.current && document.visibilityState === 'visible') step(1);
+          }, FRAME_MS);
+        }
       },
       () => {
         if (!cancelled) setStatus('error');
@@ -176,6 +186,7 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
 
   return (
     <section aria-label="Live weather radar">
+      {!mini && (
       <div className="section-title">
         <h2>Live Radar</h2>
         <span className="muted small">
@@ -203,12 +214,32 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
           ))}
         </span>
       </div>
+      )}
 
       <div className="radar-wrap">
+        {!mini && (
         <div className="radar-search">
           <SearchBar onPick={onPick} disabled={!keyPresent} />
         </div>
-        <div ref={hostRef} className="radar-host" role="application" aria-label="Interactive weather radar map" />
+        )}
+        <div
+          ref={hostRef}
+          className={`radar-host${mini ? ' mini' : ''}`}
+          role="application"
+          aria-label={mini ? 'Radar preview, activate to open the full map' : 'Interactive weather radar map'}
+          {...(mini
+            ? {
+                tabIndex: 0,
+                onClick: () => onOpen?.(),
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onOpen?.();
+                  }
+                },
+              }
+            : {})}
+        />
         {status === 'loading' && (
           <div className="radar-veil">
             <p className="muted">Loading radar frames…</p>
@@ -222,7 +253,7 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
             </button>
           </div>
         )}
-        {status === 'ready' && activeLayer === 'radar' && frameCount > 1 && (
+        {status === 'ready' && !mini && activeLayer === 'radar' && frameCount > 1 && (
           <div className="radar-timeline" role="group" aria-label="Radar animation controls">
             <button type="button" className="carousel-btn" onClick={() => step(-1)} title="Previous frame" aria-label="Previous radar frame">
               <SkipBack size={16} weight="bold" />
@@ -238,7 +269,7 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
             </span>
           </div>
         )}
-        {places.length > 1 && (
+        {!mini && places.length > 1 && (
           <div className="place-strip" role="group" aria-label="Jump to a saved place">
             {places.map((p) => (
               <button
@@ -260,9 +291,11 @@ export default function RadarMap({ places, selected, onSelect, onPick, keyPresen
           </div>
         )}
       </div>
+      {!mini && (
       <p className="muted small tier-note">
         Radar: RainViewer (free) · overlays: OpenWeatherMap · markers jump to your places.
       </p>
+      )}
     </section>
   );
 }

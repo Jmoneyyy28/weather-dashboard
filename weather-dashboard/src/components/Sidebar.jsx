@@ -1,11 +1,10 @@
 import {
-  CalendarDot,
   CircleNotch,
   CloudSun,
-  GridFour,
-  ListBullets,
+  House,
   MapPin,
   MapTrifold,
+  Newspaper,
 } from '@phosphor-icons/react';
 
 export default function Sidebar({ units, onUnits, onGeo, geoBusy, view, onNavigate }) {
@@ -15,17 +14,17 @@ export default function Sidebar({ units, onUnits, onGeo, geoBusy, view, onNaviga
         <CloudSun size={26} weight="duotone" />
       </div>
       <nav className="side-nav">
-        <button type="button" onClick={() => onNavigate('today')} title="Today" className={view === 'today' ? 'active' : ''}>
-          <span className="side-ico"><CalendarDot size={20} /></span>
-          <span className="side-lbl">Today</span>
+        <button type="button" onClick={() => onNavigate('overview')} title="Overview" className={view === 'overview' ? 'active' : ''}>
+          <span className="side-ico"><House size={20} /></span>
+          <span className="side-lbl">Overview</span>
         </button>
         <button type="button" onClick={() => onNavigate('places')} title="Places" className={view === 'places' ? 'active' : ''}>
-          <span className="side-ico"><GridFour size={20} /></span>
+          <span className="side-ico"><MapPin size={20} /></span>
           <span className="side-lbl">Places</span>
         </button>
-        <button type="button" onClick={() => onNavigate('details')} title="Details" className={view === 'details' ? 'active' : ''}>
-          <span className="side-ico"><ListBullets size={20} /></span>
-          <span className="side-lbl">Details</span>
+        <button type="button" onClick={() => onNavigate('news')} title="News" className={view === 'news' ? 'active' : ''}>
+          <span className="side-ico"><Newspaper size={20} /></span>
+          <span className="side-lbl">News</span>
         </button>
         <button type="button" onClick={() => onNavigate('map')} title="Radar map" className={view === 'map' ? 'active' : ''}>
           <span className="side-ico"><MapTrifold size={20} /></span>

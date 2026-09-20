@@ -14,9 +14,10 @@ function timeAgo(iso) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export default function NewsSection() {
+export default function NewsSection({ limit = null, teaser = false }) {
   const [state, setState] = useState({ status: 'loading', items: [], updatedAt: null });
   const lastFetch = useRef(0);
+  const items = limit != null ? state.items.slice(0, limit) : state.items;
 
   useEffect(() => {
     let live = true;
@@ -76,11 +77,15 @@ export default function NewsSection() {
   return (
     <section aria-label="Weather news">
       <div className="section-title" id="news">
-        <h2>Weather News</h2>
-        <span className="muted small">
-          Global headlines
-          {updated && ` · updated ${updated}`}
-        </span>
+        <h2>{teaser ? 'Top Stories' : 'Weather News'}</h2>
+        {teaser ? (
+          <a className="link" href="#/news">All news →</a>
+        ) : (
+          <span className="muted small">
+            Global headlines
+            {updated && ` · updated ${updated}`}
+          </span>
+        )}
       </div>
 
       {state.status === 'loading' && (
@@ -101,7 +106,7 @@ export default function NewsSection() {
 
       {state.status === 'ready' && (
         <div className="news-grid">
-          {state.items.map((n) => (
+          {items.map((n) => (
             <a key={n.id} className="news-card" href={n.link} target="_blank" rel="noreferrer" title={n.title}>
               {n.thumbnail ? (
                 <img src={n.thumbnail} alt="" loading="lazy" referrerPolicy="no-referrer" />
