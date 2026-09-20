@@ -148,9 +148,12 @@ export default function WeatherEffects({ effect }) {
           ctx.fill();
         }
       } else if (type === 'clear-day') {
-        const sx = w * 0.82;
-        const sy = h * 0.18;
-        const R = Math.max(46, Math.min(w, h) * 0.07);
+        // Phone-aware geometry: disc, rays (2.2R) and glow stay fully
+        // on-screen with a margin. Fixed 0.82w clipped past the right edge
+        // on narrow viewports and hid behind the stacked hero tile.
+        const R = Math.max(30, Math.min(w, h) * 0.06);
+        const sx = w - R * 2.8;
+        const sy = R * 2.6;
         const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 4);
         glow.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
         glow.addColorStop(1, 'rgba(255, 214, 140, 0)');
@@ -182,16 +185,18 @@ export default function WeatherEffects({ effect }) {
           ctx.fill();
         }
       } else if (type === 'clear-night') {
-        const mx = w * 0.15;
-        const my = h * 0.2;
-        const moon = ctx.createRadialGradient(mx, my, 0, mx, my, 130);
+        const MR = Math.max(18, Math.min(w, h) * 0.045);
+        const MG = MR * 5;
+        const mx = MG + 12;
+        const my = MG + 12;
+        const moon = ctx.createRadialGradient(mx, my, 0, mx, my, MG);
         moon.addColorStop(0, 'rgba(210, 220, 255, 0.35)');
         moon.addColorStop(1, 'rgba(210, 220, 255, 0)');
         ctx.fillStyle = moon;
-        ctx.fillRect(mx - 130, my - 130, 260, 260);
+        ctx.fillRect(mx - MG, my - MG, MG * 2, MG * 2);
         ctx.fillStyle = 'rgba(225, 232, 255, 0.9)';
         ctx.beginPath();
-        ctx.arc(mx, my, 26, 0, Math.PI * 2);
+        ctx.arc(mx, my, MR, 0, Math.PI * 2);
         ctx.fill();
         for (const st of stars) {
           const a = 0.25 + 0.65 * Math.abs(Math.sin((t / 1000) * st.speed + st.phase));
