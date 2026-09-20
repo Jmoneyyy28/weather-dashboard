@@ -1,5 +1,6 @@
 import { CloudSun } from '@phosphor-icons/react';
 import SearchBar from '../components/SearchBar';
+import HeroCard from '../components/HeroCard';
 import OverviewGrid from '../components/OverviewGrid';
 import RadarMap from '../components/RadarMap';
 import NewsSection from '../components/NewsSection';
@@ -23,6 +24,7 @@ export default function OverviewPage({
         <p className="muted">Your places at a glance — search, locate, compare.</p>
       </div>
       <SearchBar onPick={onPick} disabled={!keyPresent} />
+      <HeroCard place={selected} units={units} />
       <OverviewGrid
         places={places}
         selectedId={selectedId}
